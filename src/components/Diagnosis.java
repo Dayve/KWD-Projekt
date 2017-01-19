@@ -1,7 +1,5 @@
 package components;
 
-import java.util.Arrays;
-
 public class Diagnosis {
 	public static final int NUMBER_OF_ATTRIBUTES = 22;
 	

@@ -1,11 +1,14 @@
 package application;
 
 import components.Diagnosis;
+import components.ID3Tree;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.lang.Math;
 
@@ -23,8 +26,7 @@ public class Main {
 		Main.loadCSVtoDiagnosisSet("/home/dayve/Code/KWD Projekt/data/SPECT.train", trainingDataset);
 		Main.loadCSVtoDiagnosisSet("/home/dayve/Code/KWD Projekt/data/SPECT.test", testingDataset);
 		
-		// ID3 tree construction - see: "Table 1":
-		// http://www.cise.ufl.edu/~ddd/cap6635/Fall-97/Short-papers/2.htm
+		// TODO
 	}
 	
 	
@@ -33,6 +35,10 @@ public class Main {
 		
 		int setCardinality = givenSet.size(), 
 			numOfPositiveOutcomes = 0;
+		
+		if(setCardinality == 0 || isGivenSetUniform(givenSet)) {
+			return 0.0;
+		}
 
 		for(Diagnosis diagnosis : givenSet) {
 			if(diagnosis.getOverallDiagnosis()) numOfPositiveOutcomes++;
@@ -41,10 +47,11 @@ public class Main {
 		int numOfNegativeOutcomes = setCardinality - numOfPositiveOutcomes;
 		
 		// Probability of a positive result: (both variable range from 0 to 1)
-		double positive = numOfPositiveOutcomes/setCardinality;
-		double negative = numOfNegativeOutcomes/setCardinality;
-		
-		return -(positive*log2(positive) + negative*log2(negative));
+		double positive = ((double)numOfPositiveOutcomes)/((double)setCardinality);
+		double negative = ((double)numOfNegativeOutcomes)/((double)setCardinality);
+
+		// Ternary conditionals for preventing 0*(-infinity) being returned (as NaN):
+		return -((positive != 0.0 ? positive*log2(positive) : 0.0) + (negative != 0.0 ? negative*log2(negative) : 0.0));
 	}
 	
 	
@@ -53,7 +60,7 @@ public class Main {
 			throw new IndexOutOfBoundsException("Wrong attributeIndex value");
 		}
 		
-		int setCardinality = givenSet.size();
+		double setCardinality = givenSet.size();	
 		Set<Diagnosis>	positiveValues = new HashSet<Diagnosis>(),
 						negativeValues = new HashSet<Diagnosis>();
 		
@@ -65,6 +72,38 @@ public class Main {
 		return	setEntropy(givenSet) - 
 				((positiveValues.size()/setCardinality)*setEntropy(positiveValues) + 
 				(negativeValues.size()/setCardinality)*setEntropy(negativeValues));
+	}
+	
+	
+	private static boolean isGivenSetUniform(Set<Diagnosis> givenSet) {
+		// Uniform for overall diagnosis value (all overall diagnosis are the same)
+		
+		boolean lastCheckedValue = false; // Can be initialized to anything
+		boolean noneCheckedYet = true;
+		
+		for(Diagnosis diag : givenSet) {
+			if(noneCheckedYet) {
+				lastCheckedValue = diag.getOverallDiagnosis();
+				noneCheckedYet = false;
+				continue;
+			}
+			if(diag.getOverallDiagnosis() != lastCheckedValue) return false;
+		}
+		
+		return true;
+	}
+	
+	
+	private static Set<Diagnosis> subsetWhereAttributeHasValue(Set<Diagnosis> givenSet, boolean desiredValue, int atributeIndex) {
+		Set<Diagnosis> resultSet = new HashSet<Diagnosis>();
+		
+		for(Diagnosis diag : givenSet) {
+			if(diag.getNthPartialDiagnosis(atributeIndex) == desiredValue) {
+				resultSet.add(diag);
+			}
+		}
+		
+		return resultSet;
 	}
 	
 	
