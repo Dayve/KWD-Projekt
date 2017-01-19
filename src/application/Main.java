@@ -1,14 +1,12 @@
 package application;
 
 import components.Diagnosis;
-import components.ID3Tree;
+import components.ID3TreeNode;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.lang.Math;
 
@@ -26,7 +24,56 @@ public class Main {
 		Main.loadCSVtoDiagnosisSet("/home/dayve/Code/KWD Projekt/data/SPECT.train", trainingDataset);
 		Main.loadCSVtoDiagnosisSet("/home/dayve/Code/KWD Projekt/data/SPECT.test", testingDataset);
 		
-		// TODO
+		ID3TreeNode root = null;
+		ID3(trainingDataset, root);
+	}
+	
+	
+	public static void ID3(Set<Diagnosis> givenSet, ID3TreeNode parentNode) {
+		// if(givenSet.isEmpty()) return; // Doesn't change anything
+		
+		Boolean uniformProperty = givenSetUniformProperty(givenSet);
+
+		int attribWithMaxGain = whichAttributeHasMaxGain(givenSet);
+		if(parentNode == null) parentNode = new ID3TreeNode(attribWithMaxGain, null);
+		
+		if(uniformProperty != null) {
+			parentNode.setDiagnosis(uniformProperty);
+			System.out.println("Dead end");
+			return;
+		}
+		
+		Set<Diagnosis> positiveSet = subsetWhereAttributeHasValue(givenSet, true, attribWithMaxGain);
+		if(!positiveSet.isEmpty()) {
+			int maxGainFromPositive = whichAttributeHasMaxGain(positiveSet);
+			parentNode.setLeftChild(new ID3TreeNode(maxGainFromPositive, null));
+		}
+		
+		Set<Diagnosis> negativeSet = subsetWhereAttributeHasValue(givenSet, false, attribWithMaxGain);
+		if(!negativeSet.isEmpty()) {
+			int maxGainFromNegative = whichAttributeHasMaxGain(negativeSet);
+			parentNode.setRightChild(new ID3TreeNode(maxGainFromNegative, null));
+		}
+		
+		if(!positiveSet.isEmpty()) ID3(positiveSet, parentNode.getLeftChild());
+		if(!negativeSet.isEmpty()) ID3(negativeSet, parentNode.getRightChild());
+	}
+	
+	
+	private static int whichAttributeHasMaxGain(Set<Diagnosis> givenSet) {
+		int index = 0;
+		double maxInformationGain = 0.0;
+		
+		for(int i=0 ; i<Diagnosis.NUMBER_OF_ATTRIBUTES ; ++i) {
+			double gainForCurrentAttribute = informationGain(givenSet, i);
+			
+			if(gainForCurrentAttribute > maxInformationGain) {
+				maxInformationGain = gainForCurrentAttribute;
+				index = i;
+			}
+		}
+		
+		return index;
 	}
 	
 	
@@ -36,7 +83,7 @@ public class Main {
 		int setCardinality = givenSet.size(), 
 			numOfPositiveOutcomes = 0;
 		
-		if(setCardinality == 0 || isGivenSetUniform(givenSet)) {
+		if(setCardinality == 0 || givenSetUniformProperty(givenSet) != null) {
 			return 0.0;
 		}
 
@@ -75,7 +122,7 @@ public class Main {
 	}
 	
 	
-	private static boolean isGivenSetUniform(Set<Diagnosis> givenSet) {
+	private static Boolean givenSetUniformProperty(Set<Diagnosis> givenSet) {
 		// Uniform for overall diagnosis value (all overall diagnosis are the same)
 		
 		boolean lastCheckedValue = false; // Can be initialized to anything
@@ -87,10 +134,10 @@ public class Main {
 				noneCheckedYet = false;
 				continue;
 			}
-			if(diag.getOverallDiagnosis() != lastCheckedValue) return false;
+			if(diag.getOverallDiagnosis() != lastCheckedValue) return null;
 		}
 		
-		return true;
+		return lastCheckedValue;
 	}
 	
 	

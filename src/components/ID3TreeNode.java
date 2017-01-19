@@ -2,19 +2,27 @@ package components;
 
 public class ID3TreeNode {
 	
-	private boolean diagnosisValue;
-	private int diagnosisID;
-	private double infoGain;
+	//private boolean diagnosisValue;
+	private int columnIndex;
+	private Boolean diagnosis;
+	//private double infoGain;
 
-	private ID3TreeNode leftChild, rightChild;
-	
-	
-	public ID3TreeNode(boolean value, int givenDiagnosisID, double gain) {
-		this.diagnosisValue = value;
-		this.diagnosisID = givenDiagnosisID;
-		this.infoGain = gain;
+	public Boolean getDiagnosis() {
+		return diagnosis;
 	}
+	public void setDiagnosis(Boolean diagnosis) {
+		this.diagnosis = diagnosis;
+	}
+
+	private ID3TreeNode leftChild = null, rightChild = null;
 	
+	
+	public ID3TreeNode(/*boolean value, */int index, Boolean givenDiagnosis) {
+		this.diagnosis = givenDiagnosis;
+		this.columnIndex = index;
+		//this.infoGain = gain;
+	}
+	/*
 	public boolean getValue() {
 		return diagnosisValue;
 	}
@@ -30,13 +38,13 @@ public class ID3TreeNode {
 	public void setInfoGain(double infoGain) {
 		this.infoGain = infoGain;
 	}
-	
-	public int getDiagnosisID() {
-		return diagnosisID;
+	*/
+	public int getColumnIndex() {
+		return columnIndex;
 	}
 
-	public void setDiagnosisID(int diagnosisID) {
-		this.diagnosisID = diagnosisID;
+	public void setColumnIndex(int diagnosisID) {
+		this.columnIndex = diagnosisID;
 	}
 	
 	public ID3TreeNode getLeftChild() {
@@ -57,6 +65,6 @@ public class ID3TreeNode {
 	
 	@Override
 	public String toString() {
-		return "Value: "+diagnosisValue+", diagnosisID: "+diagnosisID;
+		return "Column index: " + columnIndex;
 	}
 }
