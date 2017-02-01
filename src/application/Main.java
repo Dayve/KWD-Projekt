@@ -21,8 +21,11 @@ public class Main {
 	
 	
 	public static void main(String[] args) {
-		Main.loadCSVtoDiagnosisSet("/home/dayve/Code/KWD Projekt/data/SPECT.train", trainingDataset);
-		Main.loadCSVtoDiagnosisSet("/home/dayve/Code/KWD Projekt/data/SPECT.test", testingDataset);
+		
+		Main.loadCSVtoDiagnosisSet(System.getProperty("user.dir") + 
+				"/data/SPECT.train", trainingDataset);
+		Main.loadCSVtoDiagnosisSet(System.getProperty("user.dir") + 
+				"/data/SPECT.test", testingDataset);
 		
 		ID3TreeNode root = null;
 		ID3(trainingDataset, root);
