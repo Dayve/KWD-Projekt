@@ -26,9 +26,9 @@ public class Diagnosis {
 	@Override
 	public String toString() {
 		String result = "Diagnosis: " + (overallDiagnosis ? "1" : "0");
-		for(int i=0 ; i<partialDiagnosis.length ; ++i) {
-			result += "," + (partialDiagnosis[i]  ? "1" : "0");
-		}
+		//for(int i=0 ; i<partialDiagnosis.length ; ++i) {
+		//	result += "," + (partialDiagnosis[i]  ? "1" : "0");
+		//}
 		return result;
 	}
 }
