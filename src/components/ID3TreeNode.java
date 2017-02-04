@@ -60,6 +60,6 @@ public class ID3TreeNode {
 	
 	@Override
 	public String toString() {
-		return "[NODE: (" + columnIndex + ") Diagnosis: " + diagnosis + "]";
+		return "[NODE: column: " + columnIndex + ", diagnosis: " + diagnosis + "]";
 	}
 }

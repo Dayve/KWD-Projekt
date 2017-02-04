@@ -6,7 +6,9 @@ import components.ID3TreeNode;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.lang.Math;
 
@@ -19,103 +21,129 @@ public class Main {
 	private static Set<Diagnosis>	trainingDataset = new HashSet<Diagnosis>(),
 									testingDataset = new HashSet<Diagnosis>();
 	
-	private static final String trainingSetFile = "/data/SPECT.train";
-	private static final String testingSetFile = "/data/SPECT.test";
+	private static final String trainingSetFile = "/data/SPECT.train",
+								testingSetFile = "/data/SPECT.test";
 	
 	
 	public static void main(String[] args) {
-		
+		// Load CSV files:
 		Main.loadCSVtoDiagnosisSet(System.getProperty("user.dir") + trainingSetFile, trainingDataset);
 		Main.loadCSVtoDiagnosisSet(System.getProperty("user.dir") + testingSetFile, testingDataset);
 		
+		// Divide training set into disjoint sets:
+		final int PARTITIONS_COUNT = 2;
+
+		List<Set<Diagnosis>> trainingDataSubsets = new ArrayList<Set<Diagnosis>>(PARTITIONS_COUNT);
+		
+		for (int i = 0; i < PARTITIONS_COUNT; i++) {
+			trainingDataSubsets.add(new HashSet<Diagnosis>());
+		}
+
+		int index = 0;
+		for (Diagnosis trainingDiagnosis : trainingDataset) {
+			trainingDataSubsets.get(index++ % PARTITIONS_COUNT).add(trainingDiagnosis);
+		}
+			
+		// Perform ID3 algorithm:
 		ID3TreeNode root = new ID3TreeNode();
 		
-		System.out.println("> Creating decision tree for " + trainingSetFile);
+		System.out.println("> Creating decision tree for full " + trainingSetFile);
 		ID3(trainingDataset, root, new HashSet<Integer>());
 		
-		int rightAnswerByID3Counter = 0;
-		
 		System.out.println("> Traversing decision tree - checking results for " + testingSetFile);
-		
-		for(Diagnosis testedDiagnosis : testingDataset) {
-			ID3TreeNode node = root;
-			
-			while(true) {
-				//System.out.println(node);
-				
-				if(node.getColumnIndex() != null) {
-					//System.out.println("Switching nodes");
-					
-					if(testedDiagnosis.getNthPartialDiagnosis(node.getColumnIndex())){
-						if(node.getLeftChild() != null) {
-							node = node.getLeftChild();
-						}
-					}
-					else {
-						if(node.getRightChild() != null) {
-							node = node.getRightChild();
-						}
-					}
-				}
-				
-				if(node.getDiagnosis() != null) {
-					//System.out.println("ID3 diagnosis: " + node.getDiagnosis());
-					//System.out.println("Real diagnosis: " + testedDiagnosis.getOverallDiagnosis());
-					if(node.getDiagnosis().equals(testedDiagnosis.getOverallDiagnosis())) {
-						rightAnswerByID3Counter++;
-					}
-					break;
-				}
-				
-				if(node.getDiagnosis() == null && node.getColumnIndex() == null) {
-					//System.out.println("END NODE");
-					break;
-				}
-			}
-		}
-		
-		System.out.println("> ID3 was right in " + rightAnswerByID3Counter 
-				+ " out of " + testingDataset.size() + " cases (" 
-				+ (double)rightAnswerByID3Counter/testingDataset.size()*100 + " %)");
+		traverseID3TreeForSet(root, testingDataset);
 	}
 	
 	
 	public static void ID3(Set<Diagnosis> givenSet, ID3TreeNode givenNode, Set<Integer> attributesUsed) {		
 		Boolean uniformProperty = checkIfSetIsUniform(givenSet);
 		if(uniformProperty != null) {
-			//System.out.println("Given set is uniform: (by " + uniformProperty + ") " + givenSet);
 			givenNode.setDiagnosis(uniformProperty);
 			return;
 		}
 		
 		if(attributesUsed.size() == Diagnosis.NUMBER_OF_ATTRIBUTES) {
-			//System.out.println("We've used all the attributes");
 			givenNode.setDiagnosis(whichOutcomeHasMostOccurencesInSet(givenSet));
 			return;
 		}
 		
 		Integer maxIGAttributeIndex = whichAttributeHasMaxGain(givenSet, attributesUsed);
 		if(maxIGAttributeIndex == null) {
-			System.out.println("[ERR]: Attribute index (column) is null for:");
-			System.out.println("Attributes used: " + attributesUsed);
-			System.out.println("Happened for set: " + givenSet);
+			System.out.println("[ERR]: Attribute index (column) is null");
 			return;
 		}
 		
 		givenNode.setColumnIndex(maxIGAttributeIndex);
-		//System.out.println("Node label: " + maxIGAttributeIndex);
 		attributesUsed.add(maxIGAttributeIndex);
 		
 		Set<Diagnosis> positiveSet = subsetWhereAttributeHasValue(givenSet, true, maxIGAttributeIndex);
-		ID3TreeNode leftChild = new ID3TreeNode();
-		givenNode.setLeftChild(leftChild);
+		if(!positiveSet.isEmpty()) {
+			ID3TreeNode leftChild = new ID3TreeNode();
+			givenNode.setLeftChild(leftChild);
+			
+			ID3(positiveSet, leftChild, new HashSet<Integer>(attributesUsed));
+		}
 		
 		Set<Diagnosis> negativeSet = subsetWhereAttributeHasValue(givenSet, false, maxIGAttributeIndex);
-		ID3TreeNode rightChild = new ID3TreeNode();
-		givenNode.setRightChild(rightChild);
+		if(!negativeSet.isEmpty()) {
+			ID3TreeNode rightChild = new ID3TreeNode();
+			givenNode.setRightChild(rightChild);
 		
-		if(!positiveSet.isEmpty()) ID3(positiveSet, leftChild, new HashSet<Integer>(attributesUsed));
-		if(!negativeSet.isEmpty()) ID3(negativeSet, rightChild, new HashSet<Integer>(attributesUsed));
+			ID3(negativeSet, rightChild, new HashSet<Integer>(attributesUsed));
+		}
+	}
+	
+	
+	private static void traverseID3TreeForSet(ID3TreeNode rootNode, Set<Diagnosis> testingSet) {
+		int rightAnswersCounter = 0, cannotClassifyCounter = 0;
+				
+		for(Diagnosis testedDiagnosis : testingSet) {
+			ID3TreeNode node = rootNode;
+			
+			while(true) {
+				if(node.getColumnIndex() != null) {
+					if(testedDiagnosis.getNthPartialDiagnosis(node.getColumnIndex())){
+						if(node.getLeftChild() != null) {
+							node = node.getLeftChild();
+						}
+						else {
+							cannotClassifyCounter++;
+							break;
+						}
+					}
+					else {
+						if(node.getRightChild() != null) {
+							node = node.getRightChild();
+						}
+						else {
+							cannotClassifyCounter++;
+							break;
+						}
+					}
+				}
+				
+				if(node.getDiagnosis() != null) {
+					if(node.getDiagnosis().equals(testedDiagnosis.getOverallDiagnosis())) {
+						rightAnswersCounter++;
+					}
+					break;
+				}
+			}
+		}
+		
+		System.out.println("  > ID3 was right in " + rightAnswersCounter 
+				+ " out of " + testingSet.size() + " cases (" 
+				+ (double)rightAnswersCounter/testingSet.size()*100 + " %)");
+		
+		int wrong = testingSet.size()-rightAnswersCounter-cannotClassifyCounter;
+		
+		System.out.println("  > ID3 was wrong in " + wrong
+				+ " out of " + testingSet.size() + " cases (" 
+				+ (double)wrong/testingSet.size()*100 + " %)");
+		
+		System.out.println("  > ID3 could not find a rule for " + cannotClassifyCounter 
+				+ " out of " + testingSet.size() + " cases (" 
+				+ (double)cannotClassifyCounter/testingSet.size()*100 + " %)");
 	}
 		
 	
@@ -143,9 +171,6 @@ public class Main {
 		
 		if(excludedIndexes.size() == Diagnosis.NUMBER_OF_ATTRIBUTES) {
 			System.out.println("[ERR]: All attributes used.");
-			for(Integer i : excludedIndexes) {
-				System.out.println("Excluded: " + i);
-			}
 		}
 		
 		Integer index = null;
@@ -264,7 +289,7 @@ public class Main {
 			
 			System.out.println("  > Data loaded successfully\n  > Number of records: " + set.size());
 		} catch (IOException e) {
-			System.out.println("a problem occured while parsing a CSV file.");
+			System.out.println("  > A problem occured while parsing a CSV file.");
 			e.printStackTrace();
 		}
 	}
