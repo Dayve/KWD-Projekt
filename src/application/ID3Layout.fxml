@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="650.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ID3Controller">
+   <children>
+      <Button layoutX="693.0" layoutY="155.0" mnemonicParsing="false" onAction="#generateCharts" prefHeight="30.0" text="Sprawdź skuteczność" AnchorPane.rightAnchor="47.0" AnchorPane.topAnchor="155.0">
+         <font>
+            <Font size="15.0" />
+         </font>
+      </Button>
+      <Separator layoutY="150.0" prefWidth="900.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="200.0" />
+      <Label contentDisplay="CENTER" layoutY="50.0" prefHeight="80.0" prefWidth="550.0" text="Wybierz liczbę podzbiorów, na które zostanie podzielony zbiór uczący oraz przedział procentowy względem całości zbioru uczącego, określający wielkość możliwego do wylosowania podzbioru." wrapText="true" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="250.0" AnchorPane.topAnchor="50.0">
+         <font>
+            <Font size="15.0" />
+         </font>
+         <padding>
+            <Insets left="20.0" right="20.0" />
+         </padding>
+      </Label>
+      <Label layoutX="726.0" layoutY="5.0" text="Liczba drzew:" AnchorPane.rightAnchor="80.0" AnchorPane.topAnchor="5.0">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label layoutX="695.0" layoutY="75.0" text="Przedział procentowy:" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="75.0">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <TextField fx:id="numberOfSubsetsTF" alignment="CENTER" layoutX="735.0" layoutY="35.0" prefHeight="30.0" prefWidth="75.0" text="1" AnchorPane.rightAnchor="90.0" AnchorPane.topAnchor="35.0">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </TextField>
+      <TextField fx:id="setPercentageForTreeUpperLimitTF" alignment="CENTER" layoutX="790.0" layoutY="110.0" prefHeight="30.0" prefWidth="50.0" text="70" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="110.0">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </TextField>
+      <TextField fx:id="setPercentageForTreeLowerLimitTF" alignment="CENTER" layoutX="697.0" layoutY="110.0" prefHeight="30.0" prefWidth="50.0" text="50" AnchorPane.rightAnchor="153.0" AnchorPane.topAnchor="110.0">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </TextField>
+      <Label layoutX="671.0" layoutY="110.0" text="od" AnchorPane.rightAnchor="210.0" AnchorPane.topAnchor="110.0">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label layoutX="748.0" layoutY="112.0" text="\% do" AnchorPane.rightAnchor="115.0" AnchorPane.topAnchor="112.0">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Separator layoutX="550.0" minHeight="200.0" orientation="VERTICAL" prefHeight="200.0" AnchorPane.rightAnchor="250.0" />
+      <Label contentDisplay="CENTER" prefHeight="50.0" prefWidth="550.0" text="Program generuje drzewa decyzyjne na podstawie zbioru uczącego, po czym sprawdza skuteczność ich działania na zbiorze testującym. " wrapText="true" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="250.0" AnchorPane.topAnchor="0.0">
+         <font>
+            <Font size="15.0" />
+         </font>
+         <padding>
+            <Insets left="20.0" right="20.0" />
+         </padding>
+      </Label>
+      <Label contentDisplay="CENTER" layoutY="130.0" prefHeight="50.0" prefWidth="550.0" text="Naciśnij przycisk aby zobaczyć wykresy opisujący efekty działania algorytmu." wrapText="true" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="250.0" AnchorPane.topAnchor="130.0">
+         <font>
+            <Font size="15.0" />
+         </font>
+         <padding>
+            <Insets left="20.0" right="20.0" />
+         </padding>
+      </Label>
+      <GridPane layoutY="203.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="200.0">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <PieChart fx:id="id3PieChart" prefHeight="400.0" prefWidth="878.0" />
+            <BarChart fx:id="percentageOfTreesBarChart" GridPane.columnIndex="1">
+              <xAxis>
+                <CategoryAxis side="BOTTOM" />
+              </xAxis>
+              <yAxis>
+                <NumberAxis side="LEFT" />
+              </yAxis>
+            </BarChart>
+         </children>
+      </GridPane>
+      <Label layoutX="841.0" layoutY="112.0" text="\%" AnchorPane.rightAnchor="45.0">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+   </children>
+</AnchorPane>
